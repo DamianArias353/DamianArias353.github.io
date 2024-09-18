@@ -62,20 +62,31 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
+        let html5QrCode;
+
         document.getElementById('scan-btn').addEventListener('click', function() {
-            document.getElementById('status-message').innerText = "Apunta la cámara hacia un código QR.";
+            const qrReader = document.getElementById('qr-reader');
+            
+            // Si ya está escaneando, reiniciar la vista
+            if (html5QrCode) {
+                html5QrCode.stop().then(() => {
+                    html5QrCode.clear();
+                    console.log("Escaneo detenido.");
+                }).catch(err => {
+                    console.error("Error al detener el escáner: ", err);
+                });
+            }
 
             // Mostrar el lector de QR
-            const qrReader = document.getElementById('qr-reader');
             qrReader.style.display = 'block';
+            document.getElementById('status-message').innerText = "Apunta la cámara hacia un código QR.";
 
             // Obtener el ancho del contenedor
             const qrReaderWidth = qrReader.clientWidth;
             const qrBoxSize = qrReaderWidth < 250 ? qrReaderWidth * 0.8 : 250;
 
             // Iniciar el lector de QR
-            const html5QrCode = new Html5Qrcode("qr-reader");
-
+            html5QrCode = new Html5Qrcode("qr-reader");
             html5QrCode.start(
                 { facingMode: "environment" }, // Accede a la cámara trasera
                 {
@@ -85,10 +96,11 @@
                 qrCodeMessage => {
                     console.log("QR leído: ", qrCodeMessage);
                     document.getElementById('status-message').innerText = "QR leído correctamente: " + qrCodeMessage;
-
-                    // Detener el lector si solo quieres leer un QR
+                    
+                    // Detener el lector de QR y ocultar la vista previa
                     html5QrCode.stop().then(() => {
-                        console.log("Escaneo detenido.");
+                        qrReader.style.display = 'none';
+                        console.log("Escaneo detenido y vista previa oculta.");
                     }).catch(err => {
                         console.error("Error al detener el escáner: ", err);
                     });
