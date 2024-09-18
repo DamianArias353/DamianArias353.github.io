@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Escanear QR</title>
+    <script src="https://cdn.jsdelivr.net/npm/html5-qrcode/minified/html5-qrcode.min.js"></script>
+</head>
+<body>
+    <h1>Escanear QR</h1>
+    <div style="display: flex; justify-content: center; align-items: center; height: 100vh;">
+        <button id="scan-btn">Escanear</button>
+    </div>
+    <div id="qr-reader" style="width: 500px;"></div>
+    <script>
+        document.getElementById('scan-btn').addEventListener('click', function() {
+            const html5QrCode = new Html5Qrcode("qr-reader");
+            html5QrCode.start(
+                { facingMode: "environment" }, // Accede a la cámara trasera
+                {
+                    fps: 10,    // Velocidad de fotogramas
+                    qrbox: 250  // Tamaño del área de escaneo
+                },
+                qrCodeMessage => {
+                    console.log("QR leido: ", qrCodeMessage);
+                    // Aquí puedes procesar el mensaje QR y continuar con los pasos.
+                },
+                errorMessage => {
+                    console.warn("Error al leer QR: ", errorMessage);
+                })
+                .catch(err => {
+                    console.error("No se puede iniciar el escáner: ", err);
+                });
+        });
+    </script>
+</body>
+</html>
