@@ -5,24 +5,60 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Escanear QR</title>
     <script src="https://cdn.jsdelivr.net/npm/html5-qrcode/minified/html5-qrcode.min.js"></script>
+    <style>
+        /* Estilo básico para centrar el contenido */
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        #qr-reader {
+            display: none; /* Oculto inicialmente */
+            width: 100%;
+            max-width: 500px;
+            height: 500px; /* Tamaño del área de vista previa */
+        }
+        #scan-btn {
+            position: absolute;
+            top: 20px; /* Mover el botón hacia la parte superior cuando se escanea */
+            z-index: 1000;
+        }
+    </style>
 </head>
 <body>
     <h1>Escanear QR</h1>
-    <div style="display: flex; justify-content: center; align-items: center; height: 100vh;">
-        <button id="scan-btn">Escanear</button>
-    </div>
-    <div id="qr-reader" style="width: 500px;"></div>
+    <button id="scan-btn">Escanear</button>
+    
+    <!-- Vista previa de la cámara -->
+    <div id="qr-reader"></div>
+
     <script>
         document.getElementById('scan-btn').addEventListener('click', function() {
+            // Mover el botón hacia arriba
+            document.getElementById('scan-btn').style.top = '20px';
+
+            // Mostrar el lector de QR
+            const qrReader = document.getElementById('qr-reader');
+            qrReader.style.display = 'block';
+
+            // Obtener el ancho del contenedor
+            const qrReaderWidth = qrReader.clientWidth;
+            const qrBoxSize = qrReaderWidth < 250 ? qrReaderWidth * 0.8 : 250; // Asegurarse de que qrbox no sea más grande que el ancho del contenedor
+
+            // Iniciar el lector de QR
             const html5QrCode = new Html5Qrcode("qr-reader");
             html5QrCode.start(
                 { facingMode: "environment" }, // Accede a la cámara trasera
                 {
                     fps: 10,    // Velocidad de fotogramas
-                    qrbox: 250  // Tamaño del área de escaneo
+                    qrbox: qrBoxSize  // Tamaño dinámico del área de escaneo
                 },
                 qrCodeMessage => {
-                    console.log("QR leido: ", qrCodeMessage);
+                    console.log("QR leído: ", qrCodeMessage);
                     // Aquí puedes procesar el mensaje QR y continuar con los pasos.
                 },
                 errorMessage => {
