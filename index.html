@@ -6,7 +6,6 @@
     <title>Escanear QR</title>
     <script src="https://cdn.jsdelivr.net/npm/html5-qrcode/minified/html5-qrcode.min.js"></script>
     <style>
-        /* Estilo básico para centrar el contenido */
         body, html {
             margin: 0;
             padding: 0;
@@ -17,15 +16,20 @@
             align-items: center;
         }
         #qr-reader {
-            display: none; /* Oculto inicialmente */
+            display: none;
             width: 100%;
             max-width: 500px;
-            height: 500px; /* Tamaño del área de vista previa */
+            height: 500px;
         }
         #scan-btn {
             position: absolute;
-            top: 20px; /* Mover el botón hacia la parte superior cuando se escanea */
+            top: 20px;
             z-index: 1000;
+        }
+        #status-message {
+            margin-top: 10px;
+            font-size: 1.2em;
+            color: #333;
         }
     </style>
 </head>
@@ -33,13 +37,16 @@
     <h1>Escanear QR</h1>
     <button id="scan-btn">Escanear</button>
     
-    <!-- Vista previa de la cámara -->
     <div id="qr-reader"></div>
+    
+    <!-- Mensaje de estado para mostrar si se está leyendo el QR -->
+    <div id="status-message"></div>
 
     <script>
         document.getElementById('scan-btn').addEventListener('click', function() {
             // Mover el botón hacia arriba
             document.getElementById('scan-btn').style.top = '20px';
+            document.getElementById('status-message').innerText = "Apunta la cámara hacia un código QR.";
 
             // Mostrar el lector de QR
             const qrReader = document.getElementById('qr-reader');
@@ -47,10 +54,11 @@
 
             // Obtener el ancho del contenedor
             const qrReaderWidth = qrReader.clientWidth;
-            const qrBoxSize = qrReaderWidth < 250 ? qrReaderWidth * 0.8 : 250; // Asegurarse de que qrbox no sea más grande que el ancho del contenedor
+            const qrBoxSize = qrReaderWidth < 250 ? qrReaderWidth * 0.8 : 250;
 
             // Iniciar el lector de QR
             const html5QrCode = new Html5Qrcode("qr-reader");
+
             html5QrCode.start(
                 { facingMode: "environment" }, // Accede a la cámara trasera
                 {
@@ -59,13 +67,23 @@
                 },
                 qrCodeMessage => {
                     console.log("QR leído: ", qrCodeMessage);
-                    // Aquí puedes procesar el mensaje QR y continuar con los pasos.
+                    document.getElementById('status-message').innerText = "QR leído correctamente: " + qrCodeMessage;
+                    
+                    // Aquí podrías detener el lector si solo quieres leer un QR
+                    html5QrCode.stop().then(() => {
+                        console.log("Escaneo detenido.");
+                    }).catch(err => {
+                        console.error("Error al detener el escáner: ", err);
+                    });
                 },
                 errorMessage => {
+                    // Mostrar errores en la lectura (esto es normal si no hay un QR en la vista)
                     console.warn("Error al leer QR: ", errorMessage);
+                    document.getElementById('status-message').innerText = "Aún no se ha leído un código QR.";
                 })
                 .catch(err => {
                     console.error("No se puede iniciar el escáner: ", err);
+                    document.getElementById('status-message').innerText = "No se pudo iniciar la cámara.";
                 });
         });
     </script>
