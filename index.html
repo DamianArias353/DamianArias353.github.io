@@ -58,7 +58,22 @@
     </div>
 
     <script>
+        let html5QrCode;
+
         document.getElementById('scan-btn').addEventListener('click', function() {
+            // Si el lector ya está en marcha, detenerlo y ocultar la vista previa
+            if (html5QrCode) {
+                html5QrCode.stop().then(() => {
+                    document.getElementById('qr-reader').style.display = 'none';
+                    html5QrCode.clear();
+                    html5QrCode = null;
+                    document.getElementById('status-message').innerText = "Escaneo detenido.";
+                }).catch(err => {
+                    console.error("Error al detener el escaneo:", err);
+                });
+                return;
+            }
+
             // Mover el botón hacia arriba
             document.getElementById('scan-btn').style.top = '20px';
             document.getElementById('status-message').innerText = "Apunta la cámara hacia un código QR.";
@@ -72,7 +87,7 @@
             const qrBoxSize = qrReaderWidth < 250 ? qrReaderWidth * 0.8 : 250;
 
             // Iniciar el lector de QR
-            const html5QrCode = new Html5Qrcode("qr-reader");
+            html5QrCode = new Html5Qrcode("qr-reader");
 
             html5QrCode.start(
                 { facingMode: "environment" }, // Accede a la cámara trasera
@@ -91,11 +106,13 @@
                     } else {
                         document.getElementById('status-message').innerText = "No se pudieron extraer los datos del QR.";
                     }
-                    
-                    // Detener el escáner
+
+                    // Detener el escaneo después de leer el QR
                     html5QrCode.stop().then(() => {
                         console.log("Escaneo detenido.");
                         qrReader.style.display = 'none'; // Esconder el lector de QR
+                        html5QrCode.clear();
+                        html5QrCode = null;
                     }).catch(err => {
                         console.error("Error al detener el escáner: ", err);
                     });
