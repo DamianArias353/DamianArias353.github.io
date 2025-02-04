@@ -1,219 +1,286 @@
 <!DOCTYPE html>
-<html lang="es">
-
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Escanear QR</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Envelope Animation</title>
+  <style>
+    body {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #f8d7da;
+      margin: 0;
+    }
 
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    /* CONTENEDOR DEL SOBRE */
+    .envelope {
+      position: relative;
+      width: 200px;
+      height: 120px;
+      perspective: 600px; /* Para la rotación 3D */
+    }
 
-    <script src="https://cdn.jsdelivr.net/npm/html5-qrcode/minified/html5-qrcode.min.js"></script>
-    <style>
-        body,
-        html {
-            margin: 0;
-            padding: 0;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            background-color: #f5f5f5;
-        }
+    .bottom {
+      position: absolute;
+      width: 100%;
+      height: 60px;
+      background-color: #ff6b6b;
+      bottom: 0;
+      clip-path: polygon(0% 100%, 100% 100%, 50% 0%);
+    }
 
-        h1 {
-            font-size: 2.5rem;
-            font-weight: 700;
-            margin-bottom: 20px;
-            color: #007bff;
-        }
+    .left {
+      position: absolute;
+      width: 100px;
+      height: 120px;
+      background-color: #ff8787;
+      top: 0;
+      left: 0;
+      clip-path: polygon(0% 100%, 200% 100%, 0% 0%);
+    }
 
-        #qr-reader {
-            display: none;
-            width: 100%;
-            max-width: 500px;
-            margin-top: 20px;
-            border: 1px solid #ddd;
-            border-radius: 10px;
-        }
+    .right {
+      position: absolute;
+      width: 100px;
+      height: 120px;
+      background-color: #ff8787;
+      top: 0;
+      right: 0;
+      clip-path: polygon(100% 100%, 0% 50%, 100% 0%);
+    }
 
-        #scan-btn {
-            margin-bottom: 20px;
-        }
+    /* SOLAPA SUPERIOR */
+    .flap {
+      position: absolute;
+      bottom: 100%;
+      left: 0;
+      width: 0;
+      height: 0;
+      border-left: 100px solid transparent;
+      border-right: 100px solid transparent;
+      border-bottom: 60px solid #d70040;
+      transform-origin: bottom;
+      transition: transform 0.5s;
+      transform: rotateX(180deg); 
+      /* SIN .open => rotateX(180deg) => CERRADO.
+         CON .open => rotateX(0deg) => ABIERTO. */
+    }
 
-        #status-message {
-            margin-top: 15px;
-            font-size: 1.2em;
-            color: #333;
-        }
+    .flap.open {
+      transform: rotateX(0deg);
+    }
 
-        table {
-            margin-top: 30px;
-        }
+    /* Para no ver animación inicial al cargar */
+    .flap.initial {
+      transition: none;
+    }
 
-        @media (max-width: 768px) {
-            h1 {
-                font-size: 2rem;
-            }
+    /* CARTA (TARJETA) */
+    .card {
+      position: absolute;
+      left: 50%;
+      bottom: 0;
+      width: 280px;       /* Más grande para más espacio */
+      min-height: 200px;  /* Espacio para imagen y botones */
+      background: #fff;
+      border: 2px solid #ff6b6b;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+      padding: 20px;
+      z-index: 2;
+      opacity: 0;
+      transform: translate(-50%, 20px) scale(0.95);
+      transition: transform 0.5s, opacity 0.5s;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-around;
+    }
 
-            #scan-btn {
-                width: 100%;
-            }
+    /* Al mostrar la carta, la "sube" y la hace visible */
+    .card.show {
+      opacity: 1;
+      transform: translate(-50%, -50px) scale(1);
+    }
 
-            #qr-reader {
-                height: 400px;
-            }
-        }
-    </style>
+    /* Imagen */
+    .card img {
+      width: 120px;
+      height: 120px;
+      object-fit: cover;
+      border-radius: 8px;
+    }
+
+    /* Texto */
+    .card h2 {
+      font-size: 18px;
+      color: #d70040;
+      text-align: center;
+      margin: 10px 0;
+    }
+
+    /* CONTENEDOR DE BOTONES */
+    .buttons {
+      position: relative;
+      /* Para centrar los 2 botones en la parte inferior de la tarjeta */
+      margin-top: 10px;
+      width: 220px; /* definimos un ancho fijo para colocar los 2 btns centrados */
+      height: 50px; /* algo de alto para que el "No" se pueda mover */
+    }
+
+    .buttons button {
+      position: absolute;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      background-color: #d70040;
+      color: #fff;
+      font-size: 14px;
+      padding: 8px 16px;
+    }
+
+    /* BOTÓN "SÍ": lo dejamos fijo y centrado-izquierdo */
+    #yes-btn {
+      left: 30px;  /* Ajusta para ubicar a la izquierda */
+      top: 0; 
+    }
+
+    /* BOTÓN "NO": centrado-derecha inicialmente */
+    #no-btn {
+      left: 130px; /* Ajusta para ubicar a la derecha */
+      top: 0;
+      transition: left 0.3s, top 0.3s;
+    }
+
+    /* BOTONES PRINCIPALES (OPEN / RESET) */
+    .controls {
+      margin-top: 20px;
+      display: flex;
+      gap: 10px;
+    }
+
+    .controls button {
+      padding: 10px 16px;
+      border: none;
+      background-color: #ff4757;
+      color: #fff;
+      cursor: pointer;
+      font-size: 16px;
+      border-radius: 4px;
+    }
+  </style>
 </head>
-
 <body>
+  <div class="envelope">
+    <div class="flap initial"></div>
+    <div class="left"></div>
+    <div class="right"></div>
+    <div class="bottom"></div>
 
-    <div class="container text-center">
-        <h1>Escanear QR</h1>
-
-        <button id="scan-btn" class="btn btn-primary">Escanear</button>
-
-        <div id="qr-reader" class="mx-auto"></div>
-
-        <div id="status-message"></div>
-
-        <div class="container mt-4">
-            <table id="data-table" class="table table-striped table-bordered">
-                <thead class="table-dark">
-                    <tr>
-                        <th>RUC</th>
-                        <th>Monto</th>
-                    </tr>
-                </thead>
-                <tbody>
-                </tbody>
-            </table>
-        </div>
+    <div class="card" id="card">
+      <img src="https://via.placeholder.com/120" alt="Cute dog" />
+      <h2>¿Quieres ser mi San Valentín?</h2>
+      <div class="buttons" id="buttons-container">
+        <button id="yes-btn" onclick="goToFlowers()">Sí</button>
+        <button id="no-btn">No</button>
+      </div>
     </div>
+  </div>
 
-    <!-- Bootstrap JS (for responsive behavior) -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <div class="controls">
+    <button onclick="openEnvelope()">OPEN</button>
+    <button onclick="resetEnvelope()">RESET</button>
+  </div>
 
-    <script>
-        let html5QrCode;
-        document.getElementById('scan-btn').addEventListener('click', function () {
-            // Si el lector ya está en marcha, detenerlo y ocultar la vista previa
-            if (html5QrCode) {
-                html5QrCode.stop().then(() => {
-                    document.getElementById('qr-reader').style.display = 'none';
-                    html5QrCode.clear();
-                    html5QrCode = null;
-                    document.getElementById('status-message').innerText = "Escaneo detenido.";
-                }).catch(err => {
-                    console.error("Error al detener el escaneo:", err);
-                });
-                return;
-            }
+  <script>
+    const flap = document.querySelector('.flap');
+    const card = document.getElementById('card');
+    const noBtn = document.getElementById('no-btn');
+    const buttonsContainer = document.getElementById('buttons-container');
 
-            document.getElementById('status-message').innerText = "Apunta la cámara hacia un código QR.";
-            const qrReader = document.getElementById('qr-reader');
-            qrReader.style.display = 'block';
+    // Abre sobre y muestra la carta
+    function openEnvelope() {
+      flap.classList.add('open'); 
+      card.classList.add('show');
+    }
 
-            const qrReaderWidth = qrReader.clientWidth;
-            const qrBoxSize = qrReaderWidth < 250 ? qrReaderWidth * 0.8 : 250;
+    // Cierra sobre y oculta la carta
+    function resetEnvelope() {
+      flap.classList.remove('open');
+      card.classList.remove('show');
+      // Regresa el botón "No" al centro (la posición original)
+      resetNoBtnPosition();
+      moveCount = 0;
+    }
 
-            html5QrCode = new Html5Qrcode("qr-reader");
+    // Quita la animación inicial
+    window.onload = function() {
+      setTimeout(() => {
+        flap.classList.remove('initial');
+      }, 100);
+    };
 
-            html5QrCode.start(
-                { facingMode: "environment" },
-                {
-                    fps: 10,
-                    qrbox: qrBoxSize
-                },
-                qrCodeMessage => {
-                    console.log("QR leído: ", qrCodeMessage);
+    // -- LÓGICA PARA QUE EL BOTÓN "NO" HUIDA --
+    let moveCount = 0; // cuántas veces ha huido
 
-                    const datos = extraerDatos(qrCodeMessage);
-                    if (datos) {
-                        // Llamada al backend para obtener la Razón Social
-                        buscarRazonSocial(datos.ruc, datos.monto);
-                    } else {
-                        document.getElementById('status-message').innerText = "No se pudieron extraer los datos del QR.";
-                    }
+    function resetNoBtnPosition() {
+      // Centrado a la derecha (igual que en CSS)
+      noBtn.style.left = '130px';
+      noBtn.style.top = '0';
+    }
 
-                    html5QrCode.stop().then(() => {
-                        qrReader.style.display = 'none';
-                        html5QrCode.clear();
-                        html5QrCode = null;
-                    }).catch(err => {
-                        console.error("Error al detener el escáner: ", err);
-                    });
-                },
-                errorMessage => {
-                    console.warn("Error al leer QR: ", errorMessage);
-                    document.getElementById('status-message').innerText = "Aún no se ha leído un código QR.";
-                })
-                .catch(err => {
-                    console.error("No se puede iniciar el escáner: ", err);
-                    document.getElementById('status-message').innerText = "No se pudo iniciar la cámara.";
-                });
-        });
+    noBtn.addEventListener('mouseover', function(e) {
+      moveCount++;
+      // Cada 3 escapadas, regresa a su posición original y resetea el contador
+      if (moveCount >= 3) {
+        resetNoBtnPosition();
+        moveCount = 0;
+        return;
+      }
 
-        function extraerDatos(qrCodeMessage) {
-            try {
-                if (qrCodeMessage.startsWith("https://www.efactura.dgi.gub.uy/consultaQR/cfe")) {
-                    const queryParams = qrCodeMessage.split('?')[1];
-                    if (queryParams) {
-                        const params = queryParams.split(',');
-                        if (params.length >= 6) {
-                            return {
-                                ruc: params[0],
-                                monto: params[4]
-                            };
-                        }
-                    }
-                }
-            } catch (err) {
-                console.error("Error al extraer datos del QR: ", err);
-            }
-            return null;
+      // Tamaño del contenedor
+      const containerRect = buttonsContainer.getBoundingClientRect();
+      const containerWidth = containerRect.width;
+      const containerHeight = containerRect.height;
+
+      // Tamaño del botón
+      const btnWidth = noBtn.offsetWidth;
+      const btnHeight = noBtn.offsetHeight;
+
+      // Posición del cursor dentro del contenedor
+      const mouseX = e.clientX - containerRect.left;
+      const mouseY = e.clientY - containerRect.top;
+
+      // Queremos una distancia mínima del cursor
+      const minDistance = 60; 
+      let randomX, randomY;
+      let tries = 0;
+
+      do {
+        randomX = Math.floor(Math.random() * (containerWidth - btnWidth));
+        randomY = Math.floor(Math.random() * (containerHeight - btnHeight));
+        
+        const dx = (randomX + btnWidth / 2) - mouseX;
+        const dy = (randomY + btnHeight / 2) - mouseY;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        
+        if (distance >= minDistance) {
+          break; // suficiente distancia
         }
+        tries++;
+      } while (tries < 30);
 
-        // Función para consultar la razón social al backend
-        function buscarRazonSocial(ruc, monto) {
-            fetch('http://localhost:5000/consulta_ruc', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ ruc: ruc })
-            })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.error) {
-                        console.error(data.error);
-                        agregarFila(ruc, "Error al obtener razón social", monto);
-                    } else {
-                        agregarFila(ruc, data.razon_social, monto);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error al consultar la razón social:', error);
-                    agregarFila(ruc, "Error en la consulta", monto);
-                });
-        }
-        // Agregar fila a la tabla con RUC, razón social y monto
-        function agregarFila(ruc, razonSocial, monto) {
-            const tabla = document.getElementById('data-table').getElementsByTagName('tbody')[0];
-            const nuevaFila = tabla.insertRow();
+      // Aplica la posición
+      noBtn.style.left = randomX + 'px';
+      noBtn.style.top = randomY + 'px';
+    });
 
-            const celdaRuc = nuevaFila.insertCell(0);
-            const celdaRazonSocial = nuevaFila.insertCell(1);
-            const celdaMonto = nuevaFila.insertCell(2);
-
-            celdaRuc.textContent = ruc;
-            celdaRazonSocial.textContent = razonSocial;
-            celdaMonto.textContent = monto;
-        }
-    </script>
+    function goToFlowers() {
+      window.location.href = 'animated flower.html'; // Ajusta según el nombre del archivo real
+    }
+  </script>
 </body>
-
 </html>
