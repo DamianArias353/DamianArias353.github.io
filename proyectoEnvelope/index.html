@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Envelope Animation</title>
+  <style>
+    body {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #f8d7da;
+      margin: 0;
+    }
+
+    /* CONTENEDOR DEL SOBRE */
+    .envelope {
+      position: relative;
+      width: 200px;
+      height: 120px;
+      perspective: 600px; /* Para la rotación 3D */
+    }
+
+    .bottom {
+      position: absolute;
+      width: 100%;
+      height: 60px;
+      background-color: #ff6b6b;
+      bottom: 0;
+      clip-path: polygon(0% 100%, 100% 100%, 50% 0%);
+    }
+
+    .left {
+      position: absolute;
+      width: 100px;
+      height: 120px;
+      background-color: #ff8787;
+      top: 0;
+      left: 0;
+      clip-path: polygon(0% 100%, 200% 100%, 0% 0%);
+    }
+
+    .right {
+      position: absolute;
+      width: 100px;
+      height: 120px;
+      background-color: #ff8787;
+      top: 0;
+      right: 0;
+      clip-path: polygon(100% 100%, 0% 50%, 100% 0%);
+    }
+
+    /* SOLAPA SUPERIOR */
+    .flap {
+      position: absolute;
+      bottom: 100%;
+      left: 0;
+      width: 0;
+      height: 0;
+      border-left: 100px solid transparent;
+      border-right: 100px solid transparent;
+      border-bottom: 60px solid #d70040;
+      transform-origin: bottom;
+      transition: transform 0.5s;
+      transform: rotateX(180deg); 
+      /* SIN .open => rotateX(180deg) => CERRADO.
+         CON .open => rotateX(0deg) => ABIERTO. */
+    }
+
+    .flap.open {
+      transform: rotateX(0deg);
+    }
+
+    /* Para no ver animación inicial al cargar */
+    .flap.initial {
+      transition: none;
+    }
+
+    /* CARTA (TARJETA) */
+    .card {
+      position: absolute;
+      left: 50%;
+      bottom: 0;
+      width: 280px;       /* Más grande para más espacio */
+      min-height: 200px;  /* Espacio para imagen y botones */
+      background: #fff;
+      border: 2px solid #ff6b6b;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+      padding: 20px;
+      z-index: 2;
+      opacity: 0;
+      transform: translate(-50%, 20px) scale(0.95);
+      transition: transform 0.5s, opacity 0.5s;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-around;
+    }
+
+    /* Al mostrar la carta, la "sube" y la hace visible */
+    .card.show {
+      opacity: 1;
+      transform: translate(-50%, -50px) scale(1);
+    }
+
+    /* Imagen */
+    .card img {
+      width: 120px;
+      height: 120px;
+      object-fit: cover;
+      border-radius: 8px;
+    }
+
+    /* Texto */
+    .card h2 {
+      font-size: 18px;
+      color: #d70040;
+      text-align: center;
+      margin: 10px 0;
+    }
+
+    /* CONTENEDOR DE BOTONES */
+    .buttons {
+      position: relative;
+      /* Para centrar los 2 botones en la parte inferior de la tarjeta */
+      margin-top: 10px;
+      width: 220px; /* definimos un ancho fijo para colocar los 2 btns centrados */
+      height: 50px; /* algo de alto para que el "No" se pueda mover */
+    }
+
+    .buttons button {
+      position: absolute;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      background-color: #d70040;
+      color: #fff;
+      font-size: 14px;
+      padding: 8px 16px;
+    }
+
+    /* BOTÓN "SÍ": lo dejamos fijo y centrado-izquierdo */
+    #yes-btn {
+      left: 30px;  /* Ajusta para ubicar a la izquierda */
+      top: 0; 
+    }
+
+    /* BOTÓN "NO": centrado-derecha inicialmente */
+    #no-btn {
+      left: 130px; /* Ajusta para ubicar a la derecha */
+      top: 0;
+      transition: left 0.3s, top 0.3s;
+    }
+
+    /* BOTONES PRINCIPALES (OPEN / RESET) */
+    .controls {
+      margin-top: 20px;
+      display: flex;
+      gap: 10px;
+    }
+
+    .controls button {
+      padding: 10px 16px;
+      border: none;
+      background-color: #ff4757;
+      color: #fff;
+      cursor: pointer;
+      font-size: 16px;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="envelope">
+    <div class="flap initial"></div>
+    <div class="left"></div>
+    <div class="right"></div>
+    <div class="bottom"></div>
+
+    <div class="card" id="card">
+      <img src="https://via.placeholder.com/120" alt="Cute dog" />
+      <h2>¿Quieres ser mi San Valentín?</h2>
+      <div class="buttons" id="buttons-container">
+        <button id="yes-btn" onclick="goToFlowers()">Sí</button>
+        <button id="no-btn">No</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button onclick="openEnvelope()">OPEN</button>
+    <button onclick="resetEnvelope()">RESET</button>
+  </div>
+
+  <script>
+    const flap = document.querySelector('.flap');
+    const card = document.getElementById('card');
+    const noBtn = document.getElementById('no-btn');
+    const buttonsContainer = document.getElementById('buttons-container');
+
+    // Abre sobre y muestra la carta
+    function openEnvelope() {
+      flap.classList.add('open'); 
+      card.classList.add('show');
+    }
+
+    // Cierra sobre y oculta la carta
+    function resetEnvelope() {
+      flap.classList.remove('open');
+      card.classList.remove('show');
+      // Regresa el botón "No" al centro (la posición original)
+      resetNoBtnPosition();
+      moveCount = 0;
+    }
+
+    // Quita la animación inicial
+    window.onload = function() {
+      setTimeout(() => {
+        flap.classList.remove('initial');
+      }, 100);
+    };
+
+    // -- LÓGICA PARA QUE EL BOTÓN "NO" HUIDA --
+    let moveCount = 0; // cuántas veces ha huido
+
+    function resetNoBtnPosition() {
+      // Centrado a la derecha (igual que en CSS)
+      noBtn.style.left = '130px';
+      noBtn.style.top = '0';
+    }
+
+    noBtn.addEventListener('mouseover', function(e) {
+      moveCount++;
+      // Cada 3 escapadas, regresa a su posición original y resetea el contador
+      if (moveCount >= 3) {
+        resetNoBtnPosition();
+        moveCount = 0;
+        return;
+      }
+
+      // Tamaño del contenedor
+      const containerRect = buttonsContainer.getBoundingClientRect();
+      const containerWidth = containerRect.width;
+      const containerHeight = containerRect.height;
+
+      // Tamaño del botón
+      const btnWidth = noBtn.offsetWidth;
+      const btnHeight = noBtn.offsetHeight;
+
+      // Posición del cursor dentro del contenedor
+      const mouseX = e.clientX - containerRect.left;
+      const mouseY = e.clientY - containerRect.top;
+
+      // Queremos una distancia mínima del cursor
+      const minDistance = 60; 
+      let randomX, randomY;
+      let tries = 0;
+
+      do {
+        randomX = Math.floor(Math.random() * (containerWidth - btnWidth));
+        randomY = Math.floor(Math.random() * (containerHeight - btnHeight));
+        
+        const dx = (randomX + btnWidth / 2) - mouseX;
+        const dy = (randomY + btnHeight / 2) - mouseY;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        
+        if (distance >= minDistance) {
+          break; // suficiente distancia
+        }
+        tries++;
+      } while (tries < 30);
+
+      // Aplica la posición
+      noBtn.style.left = randomX + 'px';
+      noBtn.style.top = randomY + 'px';
+    });
+
+    function goToFlowers() {
+      window.location.href = 'animated flower.html'; // Ajusta según el nombre del archivo real
+    }
+  </script>
+</body>
+</html>
