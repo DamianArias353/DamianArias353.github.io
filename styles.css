@@ -54,14 +54,33 @@ body::before {
   z-index: 9999;        /* Para que quede por delante de los corazones */
 }
 
-/* El texto inicial, si quieres que desaparezca igual */
+/* Estilo del texto inicial */
 h1 {
   font-size: 3rem;
-  color: #d70040; /* Un rojo más acorde a San Valentín */
+  color: #d70040; /* Mantiene el tono rojo */
   position: absolute;
   top: 45%;
-  font-family: "Playfair Display", serif;
-  animation: word-animation 6s ease-in-out forwards;
+  font-family: "Dancing Script", cursive; /* Ahora usa la misma fuente */
+  animation: word-animation 8s ease-in-out forwards;
+}
+
+/* Estilo del mensaje de San Valentín */
+#valentine-message {
+  position: absolute;
+  top: 15%;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 3rem;
+  font-family: "Dancing Script", cursive; /* Misma fuente */
+  font-weight: bold;
+  color: #d70040; /* Mismo color */
+  opacity: 0; /* Oculto al inicio */
+  transition: opacity 1s ease-in-out;
+}
+
+/* Mostrar el mensaje */
+#valentine-message.show {
+  opacity: 1;
 }
 
 /* Animación que hace desaparecer el h1 */

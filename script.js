@@ -1,12 +1,11 @@
 document.addEventListener("DOMContentLoaded", () => {
   const flower = document.querySelector("#animation-flower");
-  const word = document.querySelector("h1");
-  const rainDrop = document.querySelector(".rain-drop");
+  const message = document.querySelector("#valentine-message"); // Seleccionamos el mensaje
 
   setTimeout(() => {
     flower.style.display = "inherit";
-    word.style.display = "none";
-  }, 6000);
+    message.classList.add("show"); // Mostramos el mensaje al mismo tiempo que las flores
+  }, 8000);
 });
 
 function createRaindrop() {
